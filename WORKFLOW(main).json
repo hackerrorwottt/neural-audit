@@ -1,0 +1,418 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-pr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1696,
+        208
+      ],
+      "id": "a6d78b31-4491-43d1-84a4-895ceda29137",
+      "name": "Webhook",
+      "webhookId": "02c20582-3f72-4fd2-9893-555ac21f1233"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{$('Webhook').item.json.body.repository.full_name}}/pulls/{{$('Webhook').item.json.body.pull_request.number}}/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": " Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1008,
+        176
+      ],
+      "id": "5cb1e1db-4c0f-4e07-a000-89b8e73eb3a8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{$('Webhook').item.json.body.repository.owner.login}}"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{$('Webhook').item.json.body.repository.name}}"
+        },
+        "issueNumber": "={{$('Webhook').item.json.body.pull_request.number}}",
+        "body": "={{$json.text}}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        160
+      ],
+      "id": "40cea86a-2f48-4d8c-9d80-3d5b812c1ffa",
+      "name": "Create a comment on an issue",
+      "webhookId": "8dca6a6d-0dc5-4722-9522-06fe955b905f",
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "45SKYuuQmt4SCMjZ",
+          "name": "GitHub OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "=reviews",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "=pr_number",
+              "fieldValue": "={{$('Webhook').item.json.body.pull_request.number}} "
+            },
+            {
+              "fieldId": "=repo",
+              "fieldValue": "{{$('Webhook').item.json.body.repository.full_name}}"
+            },
+            {
+              "fieldId": "=review",
+              "fieldValue": "={{$('All in one').item.json.text}}"
+            },
+            {
+              "fieldId": "=verdict",
+              "fieldValue": "{{$('Basic LLM Chain').item.json.text.includes('APPROVED') ? 'APPROVED' : $('Basic LLM Chain').item.json.text.includes('REJECTED') ? 'REJECTED' : 'NEEDS CHANGES'}}"
+            },
+            {
+              "fieldId": "=pr_title",
+              "fieldValue": "={{$('Webhook').item.json.body.pull_request.title}}"
+            },
+            {
+              "fieldId": "=pr_author",
+              "fieldValue": "={{$('Webhook').item.json.body.pull_request.user.login}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1712,
+        -64
+      ],
+      "id": "319780a7-be5a-4231-939d-7e6a4c8e8876",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "4LN5ymmrt03ybzRp",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "36e04c12-c966-4881-bd40-56304d912c77",
+              "leftValue": "={{$json.body.action}}",
+              "rightValue": "\"closed\"",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1328,
+        -128
+      ],
+      "id": "1d2cf946-bdef-4ef1-945a-85c266432b8f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const files = $input.all();\n\nconst combinedDiff = files.map(file => {\n  const filename = file.json.filename;\n  const patch = file.json.patch || 'Binary file or no changes';\n  return `### File: ${filename}\\n${patch}`;\n}).join('\\n\\n---\\n\\n');\n\n// Truncate if too large (Gemini limit)\nconst truncated = combinedDiff.length > 15000 \n  ? combinedDiff.substring(0, 15000) + '\\n\\n[DIFF TRUNCATED - Too large]'\n  : combinedDiff;\n\nreturn [{\n  json: {\n    combined_diff: truncated,\n    file_count: files.length,\n    filenames: files.map(f => f.json.filename),\n    was_truncated: combinedDiff.length > 15000\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        -112
+      ],
+      "id": "3edd2e50-8243-4552-9dba-51a347e6035e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c455e985-f423-4971-ae84-88cb3a366cec",
+              "leftValue": "={{$json.combined_diff}}",
+              "rightValue": "is not empty",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -432,
+        208
+      ],
+      "id": "7680482d-c551-41c5-a8bf-bff634d26523",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/{{$('Webhook').item.json.body.repository.full_name}}/issues/{{$('Webhook').item.json.body.pull_request.number}}/labels",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Accept",
+              "value": " application/vnd.github.v3+json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"labels\": [\n    \"{{$('All in one').item.json.text.includes('CRITICAL') ? 'security-risk' : 'looks-good'}}\",\n    \"{{$('All in one').item.json.text.includes('BUG') || $('All in one').item.json.text.includes('bug') ? 'has-bugs' : ''}}\",\n    \"neural-audit-reviewed\"\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        -80
+      ],
+      "id": "aab91cff-f081-4deb-a472-475443e2ad2b",
+      "name": "Auto-label PRs"
+    },
+    {
+      "parameters": {
+        "sendTo": "shlok3maruti@gmail.com",
+        "subject": "=🤖 Neural Audit Review — {{$('Webhook').item.json.body.repository.full_name}} PR #{{$('Webhook').item.json.body.pull_request.number}}",
+        "message": "=<h2>🤖 Neural Audit Code Review Complete</h2>\n\n<table style=\"border-collapse:collapse;width:100%\">\n  <tr style=\"background:#f4f4f4\">\n    <td style=\"padding:8px;border:1px solid #ddd\"><b>Repo</b></td>\n    <td style=\"padding:8px;border:1px solid #ddd\">{{$('Webhook').item.json.body.repository.full_name}}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:8px;border:1px solid #ddd\"><b>PR #</b></td>\n    <td style=\"padding:8px;border:1px solid #ddd\">{{$('Webhook').item.json.body.pull_request.number}}</td>\n  </tr>\n  <tr style=\"background:#f4f4f4\">\n    <td style=\"padding:8px;border:1px solid #ddd\"><b>Title</b></td>\n    <td style=\"padding:8px;border:1px solid #ddd\">{{$('Webhook').item.json.body.pull_request.title}}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:8px;border:1px solid #ddd\"><b>Author</b></td>\n    <td style=\"padding:8px;border:1px solid #ddd\">{{$('Webhook').item.json.body.pull_request.user.login}}</td>\n  </tr>\n</table>\n\n<h3>📊 Review Summary</h3>\n<pre>{{$('All in one').item.json.text}}</pre>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        192
+      ],
+      "id": "6f6031d3-bdb3-44de-9c75-807745ab099b",
+      "name": "Send a message",
+      "webhookId": "0083bdbb-e4fe-4b1b-875d-e79e21507baa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "m4x4abREbIFnExPr",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        112,
+        208
+      ],
+      "id": "2a4a3c26-2a9f-48df-a394-15a3d3c88967",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "p3jzHTFy7p0tkxK5",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert code reviewer with deep knowledge in security, bugs, performance and code quality.\n\nAnalyze this code diff across ALL 4 dimensions:\n\n{{$input.first().json.combined_diff}}\n\n## 🔴 SECURITY ANALYSIS\nLook for: SQL Injection, XSS, hardcoded secrets, eval/exec, auth bypasses\nFor each issue:\n🔴 [CRITICAL/WARNING] `filename` line X\n- **Vulnerability:** name\n- **Attack Vector:** how exploited\n- **Fix:** exact fix\n\nIf none: ✅ NO SECURITY ISSUES\n\nSECURITY_SCORE: X/25\n\n---\n\n## 🐛 BUG ANALYSIS\nLook for: null errors, unhandled exceptions, wrong logic, memory leaks\nFor each issue:\n🐛 [WARNING/INFO] `filename` line X\n- **Bug:** what's wrong\n- **Impact:** runtime effect\n- **Fix:** exact fix\n\nIf none: ✅ NO BUGS FOUND\n\nBUG_SCORE: X/25\n\n---\n\n## ⚡ PERFORMANCE ANALYSIS\nLook for: N+1 queries, inefficient loops, missing caching, blocking calls\nFor each issue:\n⚡ [WARNING/INFO] `filename` line X\n- **Issue:** performance problem\n- **Fix:** exact fix\n\nIf none: ✅ NO PERFORMANCE ISSUES\n\nPERFORMANCE_SCORE: X/25\n\n---\n\n## 🧹 CODE QUALITY ANALYSIS\nLook for: poor naming, code duplication, deep nesting, magic numbers\nFor each issue:\n🧹 [INFO] `filename` line X\n- **Issue:** quality problem\n- **Fix:** exact fix\n\nIf none: ✅ NO QUALITY ISSUES\n\nQUALITY_SCORE: X/25\n\n---\n\n## 📊 FINAL SCORE: XX/100\n(Sum of all 4 scores)\n\n## Verdict: ✅ APPROVED / ⚠️ NEEDS CHANGES / ❌ REJECTED\n**Reason:** one line explanation",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        0,
+        -80
+      ],
+      "id": "0446245a-e371-46fc-929d-6ab3143570ce",
+      "name": "All in one",
+      "retryOnFail": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a comment on an issue": {
+      "main": [
+        [
+          {
+            "node": "Auto-label PRs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "All in one",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-label PRs": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "All in one",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All in one": {
+      "main": [
+        [
+          {
+            "node": "Create a comment on an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2b4e0e90b8c5cb9f69525738130674580f6c01df147c34c98be5acd837bbb1b1"
+  }
+}
