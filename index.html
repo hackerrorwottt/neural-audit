@@ -1206,6 +1206,33 @@
     }
   });
 
+  // ── SUPABASE CONFIG ──
+  const SUPABASE_URL = "https://ollioaglvqkcqkyhcvbc.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_HBoct32_GziU4mztPzKkIg_AsdOvEeP";
+
+  // Save/refresh this user's GitHub token in Supabase so the review
+  // workflow can look up the RIGHT user's token instead of a shared one.
+  async function saveTokenToSupabase(username, githubToken) {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates"
+        },
+        body: JSON.stringify({
+          github_username: username,
+          github_token: githubToken,
+          token_updated_at: new Date().toISOString()
+        })
+      });
+    } catch (err) {
+      console.error('Failed to save token to Supabase:', err);
+    }
+  }
+
   // ── SIGN IN ──
   window._signInWithGitHub = async function () {
     try {
@@ -1216,6 +1243,30 @@
 
       // Store token in sessionStorage so n8n calls can use it
       sessionStorage.setItem('gh_token', accessToken);
+
+      // Get the REAL GitHub username directly from GitHub's API.
+      // Firebase's displayName is often the person's full name, not their
+      // GitHub login — and the n8n workflow needs the exact login to match
+      // against webhook payloads later, so we ask GitHub directly instead
+      // of guessing from an unreliable Firebase field.
+      let githubUsername = null;
+      try {
+        const ghRes = await fetch('https://api.github.com/user', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const ghUser = await ghRes.json();
+        githubUsername = ghUser.login;
+      } catch (err) {
+        console.error('Failed to fetch GitHub username:', err);
+      }
+
+      // Persist this user's token so reviews on THEIR repos use THEIR
+      // credentials instead of a single shared/hardcoded token.
+      if (githubUsername) {
+        await saveTokenToSupabase(githubUsername, accessToken);
+      } else {
+        console.warn('Skipped saving token to Supabase — could not resolve GitHub username.');
+      }
 
       populateDashboard(user);
       showDashboard();
