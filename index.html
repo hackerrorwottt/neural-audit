@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neural Audit — AI Code Review</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    :root {
+      --bg: #000000;
+      --bg2: #0a0a0a;
+      --bg3: #161616;
+      --border: #2a2a2a;
+      --accent: #ffffff;
+      --accent2: #d0d0d0;
+      --green: #22d3a0;
+      --red: #ff5c5c;
+      --yellow: #ffc85c;
+      --text: #f5f5f5;
+      --muted: #8a8a8a;
+      --card: #0f0f0f;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+    }
+
+    nav .nav-links { display: flex; gap: 32px; align-items: center; }
+    nav .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+    nav .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000000;
+    }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-github {
+      background: var(--text);
+      color: #0a0a0f;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-size: 15px;
+    }
+    .btn-github:hover { background: #d0d0ff; transform: translateY(-1px); }
+
+    /* ── PAGES ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── LANDING ── */
+    .hero {
+      padding: 100px 48px 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--accent2);
+      font-weight: 500;
+      margin-bottom: 32px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .hero h1 {
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, #ffffff, #888888);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .hero-actions { display: flex; gap: 16px; justify-content: center; align-items: center; }
+
+    /* ── TERMINAL DEMO ── */
+    .terminal {
+      max-width: 780px;
+      margin: 80px auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--bg3);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+
+    .terminal-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: 8px;
+    }
+
+    .terminal-body { padding: 24px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 2; }
+    .t-muted { color: var(--muted); }
+    .t-green { color: var(--green); }
+    .t-red { color: var(--red); }
+    .t-yellow { color: var(--yellow); }
+    .t-accent { color: var(--accent2); }
+    .t-white { color: var(--text); }
+
+    /* ── FEATURES ── */
+    .features {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 48px;
+    }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 48px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ── STATS ── */
+    .stats {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 48px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      text-align: center;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .stat-num {
+      font-size: 48px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, #ffffff, #888888);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+    /* ── PRICING ── */
+    .pricing {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 48px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .pricing-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--accent);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #000000;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+
+    .pricing-plan { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .pricing-price { font-size: 40px; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+    .pricing-period { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    .pricing-features { list-style: none; margin-bottom: 32px; }
+    .pricing-features li {
+      font-size: 14px;
+      color: var(--muted);
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pricing-features li::before { content: '✓'; color: var(--green); font-weight: 700; }
+
+    /* ── AUTH PAGE ── */
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+    }
+
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .auth-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .auth-card h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; margin-top: 24px; }
+    .auth-card p { color: var(--muted); font-size: 14px; margin-bottom: 32px; line-height: 1.6; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── DASHBOARD ── */
+    .dashboard { display: none; }
+    .dashboard.active { display: flex; }
+
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+
+    .sidebar-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 16px;
+      padding: 0 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-nav { padding: 16px 0; }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-item:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .sidebar-item.active { color: var(--text); border-left-color: var(--accent); background: rgba(255,255,255,0.07); }
+
+    .sidebar-user {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffffff, #888888);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #000000;
+    }
+
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-plan { font-size: 11px; color: var(--accent2); }
+
+    .logout-btn {
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .sidebar-user:hover .logout-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .logout-btn:hover { color: var(--text); border-color: var(--accent); }
+
+    .main-content {
+      margin-left: 240px;
+      flex: 1;
+      padding: 32px;
+      min-height: 100vh;
+    }
+
+    .dash-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .dash-header h1 { font-size: 24px; font-weight: 700; }
+    .dash-header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    /* ── STATS CARDS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stat-card-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+    .stat-card-value { font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .stat-card-sub { font-size: 12px; color: var(--green); margin-top: 4px; }
+
+    /* ── REPOS ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-header h2 { font-size: 18px; font-weight: 600; }
+
+    .repos-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .repo-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+
+    .repo-card:hover { border-color: var(--accent); }
+
+    .repo-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .repo-name { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .repo-name span { color: var(--muted); font-weight: 400; }
+
+    .toggle {
+      width: 40px;
+      height: 22px;
+      background: var(--border);
+      border-radius: 100px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle.on { background: var(--accent); }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #888888;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .toggle.on::after { transform: translateX(18px); background: #000000; }
+
+    .repo-meta { font-size: 12px; color: var(--muted); display: flex; gap: 16px; margin-bottom: 12px; }
+
+    .repo-stats { display: flex; gap: 12px; }
+
+    .repo-stat {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    .stat-green { background: rgba(34,211,160,0.1); color: var(--green); }
+    .stat-red { background: rgba(255,92,92,0.1); color: var(--red); }
+    .stat-yellow { background: rgba(255,200,92,0.1); color: var(--yellow); }
+    .stat-purple { background: rgba(255,255,255,0.08); color: var(--text); }
+
+    /* ── REVIEWS TABLE ── */
+    .reviews-table {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      padding: 12px 20px;
+      background: var(--bg3);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      align-items: center;
+      transition: background 0.15s;
+    }
+
+    .table-row:hover { background: rgba(255,255,255,0.03); }
+
+    .pr-title { font-weight: 500; }
+    .pr-num { color: var(--muted); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+
+    .verdict-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .verdict-approved { background: rgba(34,211,160,0.1); color: var(--green); }
+    .verdict-changes { background: rgba(255,200,92,0.1); color: var(--yellow); }
+    .verdict-rejected { background: rgba(255,92,92,0.1); color: var(--red); }
+
+    .score-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .score-bar { flex: 1; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #888888, #ffffff); }
+
+    /* ── LEADERBOARD ── */
+    .leaderboard {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 32px;
+    }
+
+    .leaderboard-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .leaderboard-header h3 { font-size: 15px; font-weight: 600; }
+
+    .leaderboard-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+    }
+
+    .rank {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      width: 24px;
+      color: var(--muted);
+    }
+
+    .rank.gold { color: #ffd700; }
+    .rank.silver { color: #c0c0c0; }
+    .rank.bronze { color: #cd7f32; }
+
+    .lb-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffffff, #888888);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #000000;
+    }
+
+    .lb-info { flex: 1; }
+    .lb-name { font-size: 14px; font-weight: 600; }
+    .lb-meta { font-size: 12px; color: var(--muted); }
+
+    .lb-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .lb-trend { font-size: 12px; }
+    .trend-up { color: var(--green); }
+    .trend-down { color: var(--red); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     LANDING PAGE
+════════════════════════════════════════ -->
+<div id="landing" class="page active">
+  <nav>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      neural_audit
+    </div>
+    <div class="nav-links">
+      <a onclick="scrollTo(0,0)">Home</a>
+      <a onclick="document.getElementById('features-section').scrollIntoView({behavior:'smooth'})">Features</a>
+      <a onclick="document.getElementById('pricing-section').scrollIntoView({behavior:'smooth'})">Pricing</a>
+      <button class="btn btn-primary" onclick="signInWithGitHub()">Sign in with GitHub</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-badge">Powered by AI Agents</div>
+    <h1>Code reviews that<br/><span>actually ship faster</span></h1>
+    <p>Neural Audit automatically reviews every pull request — catching security vulnerabilities, bugs, and performance issues before they reach production.</p>
+    <div class="hero-actions">
+      <button class="btn btn-github" onclick="signInWithGitHub()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        Continue with GitHub
+      </button>
+      <button class="btn btn-outline" onclick="document.getElementById('features-section').scrollIntoView({behavior:'smooth'})">See how it works</button>
+    </div>
+  </div>
+
+  <!-- Terminal Demo -->
+  <div class="terminal" style="margin: 0 auto 80px; max-width: 780px; padding: 0 48px; box-sizing: content-box;">
+    <div class="terminal-bar">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <span class="terminal-title">Neural Audit — PR #42 review</span>
+    </div>
+    <div class="terminal-body">
+      <div class="t-muted">Neural Audit analyzing PR #42...</div>
+      <div>&nbsp;</div>
+      <div class="t-accent">SECURITY ANALYSIS</div>
+      <div class="t-red">  [CRITICAL] app.py line 23 — SQL Injection (CWE-89)</div>
+      <div class="t-muted">  Attack vector: unsanitized user_input in query string</div>
+      <div class="t-green">  Fix: use parameterized queries</div>
+      <div>&nbsp;</div>
+      <div class="t-accent">BUG ANALYSIS</div>
+      <div class="t-yellow">  [WARNING] utils.py line 47 — Unhandled NullPointerException</div>
+      <div class="t-green">  Fix: add null check before accessing .value</div>
+      <div>&nbsp;</div>
+      <div class="t-accent">Code Quality Score: <span class="t-red">42/100</span></div>
+      <div class="t-accent">Verdict: <span class="t-red">REJECTED — 1 CRITICAL security issue</span></div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div id="features-section" class="features">
+    <div class="section-label">Features</div>
+    <div class="section-title">Everything your team needs</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">01</div>
+        <h3>Security Scanning</h3>
+        <p>Detects SQL injection, XSS, hardcoded secrets, command injection and 20+ OWASP vulnerabilities automatically.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">02</div>
+        <h3>Bug Detection</h3>
+        <p>Catches null pointer errors, race conditions, unhandled exceptions, and logical bugs before they reach production.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">03</div>
+        <h3>Performance Analysis</h3>
+        <p>Identifies N+1 queries, missing indexes, inefficient loops, and blocking synchronous operations.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">04</div>
+        <h3>Code Quality</h3>
+        <p>Enforces naming conventions, DRY principles, complexity limits, and best practices across your entire codebase.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">05</div>
+        <h3>Auto Labeling</h3>
+        <p>Automatically labels PRs with security-risk, has-bugs, or looks-good so your team knows what needs attention.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">06</div>
+        <h3>Instant Notifications</h3>
+        <p>Get email alerts the moment a review is complete with the full analysis and actionable fix suggestions.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div>
+      <div class="stat-num">10x</div>
+      <div class="stat-label">Faster code reviews</div>
+    </div>
+    <div>
+      <div class="stat-num">94%</div>
+      <div class="stat-label">Bug detection rate</div>
+    </div>
+    <div>
+      <div class="stat-num">0</div>
+      <div class="stat-label">Setup required</div>
+    </div>
+    <div>
+      <div class="stat-num">24/7</div>
+      <div class="stat-label">Always watching</div>
+    </div>
+  </div>
+
+  <!-- Pricing -->
+  <div id="pricing-section" class="pricing">
+    <div class="section-label">Pricing</div>
+    <div class="section-title">Simple, transparent pricing</div>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-plan">Free</div>
+        <div class="pricing-price">$0</div>
+        <div class="pricing-period">forever</div>
+        <ul class="pricing-features">
+          <li>3 repositories</li>
+          <li>100 reviews/month</li>
+          <li>Security scanning</li>
+          <li>Email notifications</li>
+        </ul>
+        <button class="btn btn-outline" style="width:100%" onclick="showPage('login')">Get started</button>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-plan">Pro</div>
+        <div class="pricing-price">$19</div>
+        <div class="pricing-period">per month</div>
+        <ul class="pricing-features">
+          <li>Unlimited repositories</li>
+          <li>Unlimited reviews</li>
+          <li>All 4 analysis modules</li>
+          <li>Developer leaderboard</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="btn btn-primary" style="width:100%" onclick="showPage('login')">Start free trial</button>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-plan">Team</div>
+        <div class="pricing-price">$49</div>
+        <div class="pricing-period">per month</div>
+        <ul class="pricing-features">
+          <li>Everything in Pro</li>
+          <li>Team analytics</li>
+          <li>Custom rules</li>
+          <li>Slack integration</li>
+          <li>SSO / SAML</li>
+        </ul>
+        <button class="btn btn-outline" style="width:100%" onclick="showPage('login')">Contact sales</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="logo"><div class="logo-dot"></div>neural_audit</div>
+    <div>© 2026 Neural Audit. Built for developers.</div>
+    <div style="display:flex;gap:24px">
+      <a href="#" style="color:var(--muted);text-decoration:none">Privacy</a>
+      <a href="#" style="color:var(--muted);text-decoration:none">Terms</a>
+      <a href="#" style="color:var(--muted);text-decoration:none">GitHub</a>
+    </div>
+  </footer>
+</div>
+
+<!-- ════════════════════════════════════════
+     LOGIN PAGE
+════════════════════════════════════════ -->
+<div id="login" class="page">
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-dot"></div>
+        neural_audit
+      </div>
+      <h2>Welcome back</h2>
+      <p>Sign in with your GitHub account to start reviewing pull requests automatically.</p>
+
+      <button class="btn btn-github" style="width:100%;justify-content:center" onclick="signInWithGitHub()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        Continue with GitHub
+      </button>
+
+      <div class="divider">or</div>
+
+      <p style="font-size:12px;color:var(--muted)">By signing in you agree to our <a href="#" style="color:var(--accent)">Terms</a> and <a href="#" style="color:var(--accent)">Privacy Policy</a></p>
+
+      <div style="margin-top:24px">
+        <button class="btn btn-outline" style="width:100%;font-size:13px" onclick="showPage('landing')">← Back to home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     DASHBOARD
+════════════════════════════════════════ -->
+<div id="dashboard" class="dashboard">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-dot"></div>
+      neural_audit
+    </div>
+    <div class="sidebar-nav">
+      <div class="sidebar-item active" onclick="showDashTab('overview')">Overview</div>
+      <div class="sidebar-item" onclick="showDashTab('repos')">Repositories</div>
+      <div class="sidebar-item" onclick="showDashTab('reviews')">Reviews</div>
+      <div class="sidebar-item" onclick="showDashTab('leaderboard')">Leaderboard</div>
+      <div class="sidebar-item" onclick="showDashTab('settings')">Settings</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="user-avatar">H</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">hackerrorwottt</div>
+        <div class="user-plan" id="user-plan">Pro Plan</div>
+      </div>
+      <div class="logout-btn" id="logout-btn" onclick="logout()" title="Log out">Logout</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- OVERVIEW TAB -->
+    <div id="tab-overview">
+      <div class="dash-header">
+        <div>
+          <h1>Good afternoon</h1>
+          <p>Here's what Neural Audit found today</p>
+        </div>
+        <button class="btn btn-primary" onclick="showDashTab('repos')">+ Add Repository</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-card-label">Total Reviews</div>
+          <div class="stat-card-value">19</div>
+          <div class="stat-card-sub">↑ 4 today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Issues Found</div>
+          <div class="stat-card-value" style="color:var(--red)">47</div>
+          <div class="stat-card-sub" style="color:var(--red)">12 critical</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Avg Score</div>
+          <div class="stat-card-value" style="color:var(--yellow)">61</div>
+          <div class="stat-card-sub">↑ 8pts this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Active Repos</div>
+          <div class="stat-card-value" style="color:var(--accent2)">3</div>
+          <div class="stat-card-sub">2 reviewed today</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2>Recent Reviews</h2>
+      </div>
+      <div class="reviews-table">
+        <div class="table-header">
+          <div>Pull Request</div>
+          <div>Repo</div>
+          <div>Score</div>
+          <div>Verdict</div>
+          <div>Time</div>
+        </div>
+        <div class="table-row">
+          <div><div class="pr-title">Fix eval usage in numpy.test</div><div class="pr-num">#19</div></div>
+          <div style="color:var(--muted);font-size:13px">demorepo</div>
+          <div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:42%"></div></div><span style="font-size:12px;font-family:'JetBrains Mono',monospace">42</span></div></div>
+          <div><span class="verdict-badge verdict-changes">⚠ Needs Changes</span></div>
+          <div style="color:var(--muted);font-size:12px">2 min ago</div>
+        </div>
+        <div class="table-row">
+          <div><div class="pr-title">Add user authentication</div><div class="pr-num">#18</div></div>
+          <div style="color:var(--muted);font-size:13px">demorepo</div>
+          <div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:78%"></div></div><span style="font-size:12px;font-family:'JetBrains Mono',monospace">78</span></div></div>
+          <div><span class="verdict-badge verdict-approved">✓ Approved</span></div>
+          <div style="color:var(--muted);font-size:12px">1 hr ago</div>
+        </div>
+        <div class="table-row">
+          <div><div class="pr-title">Refactor database queries</div><div class="pr-num">#17</div></div>
+          <div style="color:var(--muted);font-size:13px">demorepo</div>
+          <div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:31%"></div></div><span style="font-size:12px;font-family:'JetBrains Mono',monospace">31</span></div></div>
+          <div><span class="verdict-badge verdict-rejected">✕ Rejected</span></div>
+          <div style="color:var(--muted);font-size:12px">3 hr ago</div>
+        </div>
+        <div class="table-row">
+          <div><div class="pr-title">Update dependencies</div><div class="pr-num">#16</div></div>
+          <div style="color:var(--muted);font-size:13px">demorepo</div>
+          <div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:91%"></div></div><span style="font-size:12px;font-family:'JetBrains Mono',monospace">91</span></div></div>
+          <div><span class="verdict-badge verdict-approved">✓ Approved</span></div>
+          <div style="color:var(--muted);font-size:12px">5 hr ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPOS TAB -->
+    <div id="tab-repos" style="display:none">
+      <div class="dash-header">
+        <div>
+          <h1>Repositories</h1>
+          <p>Enable Neural Audit on any repo with one click</p>
+        </div>
+        <button class="btn btn-primary">+ Connect Repo</button>
+      </div>
+
+      <div class="repos-grid" id="repos-grid">
+        <div style="color:var(--muted);font-size:14px;padding:20px">Loading your repositories…</div>
+      </div>
+    </div>
+
+    <!-- REVIEWS TAB -->
+    <div id="tab-reviews" style="display:none">
+      <div class="dash-header">
+        <div>
+          <h1>All Reviews</h1>
+          <p>Complete history of every PR Neural Audit has analyzed</p>
+        </div>
+      </div>
+      <div class="reviews-table">
+        <div class="table-header">
+          <div>Pull Request</div>
+          <div>Repo</div>
+          <div>Score</div>
+          <div>Verdict</div>
+          <div>Date</div>
+        </div>
+        <div class="table-row"><div><div class="pr-title">Fix eval usage</div><div class="pr-num">#19</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:42%"></div></div><span style="font-size:12px">42</span></div></div><div><span class="verdict-badge verdict-changes">⚠ Needs Changes</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
+        <div class="table-row"><div><div class="pr-title">Add auth module</div><div class="pr-num">#18</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:78%"></div></div><span style="font-size:12px">78</span></div></div><div><span class="verdict-badge verdict-approved">✓ Approved</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
+        <div class="table-row"><div><div class="pr-title">DB query refactor</div><div class="pr-num">#17</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:31%"></div></div><span style="font-size:12px">31</span></div></div><div><span class="verdict-badge verdict-rejected">✕ Rejected</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
+        <div class="table-row"><div><div class="pr-title">Update deps</div><div class="pr-num">#16</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:91%"></div></div><span style="font-size:12px">91</span></div></div><div><span class="verdict-badge verdict-approved">✓ Approved</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
+        <div class="table-row"><div><div class="pr-title">Fix SQL injection</div><div class="pr-num">#15</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:55%"></div></div><span style="font-size:12px">55</span></div></div><div><span class="verdict-badge verdict-changes">⚠ Needs Changes</span></div><div style="color:var(--muted);font-size:12px">Jun 11</div></div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD TAB -->
+    <div id="tab-leaderboard" style="display:none">
+      <div class="dash-header">
+        <div>
+          <h1>Developer Leaderboard</h1>
+          <p>Top contributors ranked by code quality score</p>
+        </div>
+      </div>
+
+      <div class="leaderboard">
+        <div class="leaderboard-header">
+          <h3>This Month's Rankings</h3>
+          <span style="color:var(--muted);font-size:13px">Based on avg PR quality score</span>
+        </div>
+        <div class="leaderboard-row">
+          <div class="rank gold">1</div>
+          <div class="lb-avatar">S</div>
+          <div class="lb-info">
+            <div class="lb-name">sarthakjaiswal</div>
+            <div class="lb-meta">14 PRs · 0 critical issues</div>
+          </div>
+          <div class="lb-score">94</div>
+          <div class="lb-trend trend-up">↑ +12%</div>
+        </div>
+        <div class="leaderboard-row">
+          <div class="rank silver">2</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,#e0e0e0,#888888)">K</div>
+          <div class="lb-info">
+            <div class="lb-name">krishna_dev</div>
+            <div class="lb-meta">11 PRs · 2 warnings</div>
+          </div>
+          <div class="lb-score">87</div>
+          <div class="lb-trend trend-up">↑ +5%</div>
+        </div>
+        <div class="leaderboard-row">
+          <div class="rank bronze">3</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,#cccccc,#666666)">H</div>
+          <div class="lb-info">
+            <div class="lb-name">hackerrorwottt</div>
+            <div class="lb-meta">19 PRs · 12 critical issues</div>
+          </div>
+          <div class="lb-score">61</div>
+          <div class="lb-trend trend-up">↑ +8%</div>
+        </div>
+        <div class="leaderboard-row">
+          <div class="rank" style="color:var(--muted)">4</div>
+          <div class="lb-avatar" style="background:linear-gradient(135deg,#a0a0a0,#404040)">A</div>
+          <div class="lb-info">
+            <div class="lb-name">aryan_codes</div>
+            <div class="lb-meta">6 PRs · 5 warnings</div>
+          </div>
+          <div class="lb-score">58</div>
+          <div class="lb-trend trend-down">↓ -3%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div id="tab-settings" style="display:none">
+      <div class="dash-header">
+        <div>
+          <h1>Settings</h1>
+          <p>Configure Neural Audit for your workflow</p>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:16px;max-width:600px">
+        <div class="repo-card">
+          <h3 style="margin-bottom:16px;font-size:16px">Notifications</h3>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-size:14px">Email on review complete</div><div style="font-size:12px;color:var(--muted)">Get notified when every PR is reviewed</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-size:14px">Alert on critical issues</div><div style="font-size:12px;color:var(--muted)">Immediate alert for security vulnerabilities</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="repo-card">
+          <h3 style="margin-bottom:16px;font-size:16px">Review Actions</h3>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-size:14px">Auto-label PRs</div><div style="font-size:12px;color:var(--muted)">Add labels based on review verdict</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-size:14px">Auto approve/request changes</div><div style="font-size:12px;color:var(--muted)">Automatically act on review verdict</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="width:fit-content">Save Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── FIREBASE SDK ── -->
+<script>
+  // Global stubs so onclick= buttons never throw before module loads
+  function signInWithGitHub() { window._signInWithGitHub && window._signInWithGitHub(); }
+  function logout()            { window._logout && window._logout(); }
+  function showPage(id)        { window._showPage && window._showPage(id); }
+  function showDashboard()     { window._showDashboard && window._showDashboard(); }
+  function showDashTab(tab)    { window._showDashTab && window._showDashTab(tab); }
+  function loadRepos(t)        { window._loadRepos && window._loadRepos(t); }
+  function toggleRepo(el,n,id) { window._toggleRepo && window._toggleRepo(el,n,id); }
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, GithubAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  // ── CONFIG ──
+  const firebaseConfig = {
+    apiKey: "AIzaSyDNXOwjtZU-HETqzkotiEq1W1r2QEjHm6M",
+    authDomain: "neural-audit.firebaseapp.com",
+    projectId: "neural-audit",
+    storageBucket: "neural-audit.firebasestorage.app",
+    messagingSenderId: "185749594281",
+    appId: "1:185749594281:web:c8969b8e0a38dafef849b8"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GithubAuthProvider();
+
+  // Request repo access so we can list & install webhooks later
+  provider.addScope('repo');
+
+  // ── AUTH STATE LISTENER ──
+  // Fires on page load — if user was already logged in, go straight to dashboard
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      populateDashboard(user);
+      showDashboard();
+    } else {
+      showPage('landing');
+    }
+  });
+
+  // ── SIGN IN ──
+  window._signInWithGitHub = async function () {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user        = result.user;
+      const credential  = GithubAuthProvider.credentialFromResult(result);
+      const accessToken = credential.accessToken;
+
+      // Store token in sessionStorage so n8n calls can use it
+      sessionStorage.setItem('gh_token', accessToken);
+
+      populateDashboard(user);
+      showDashboard();
+      // Load real repos right away
+      loadRepos(accessToken);
+    } catch (err) {
+      console.error('GitHub sign-in failed:', err.message);
+      alert('Sign-in failed: ' + err.message);
+    }
+  };
+
+  // ── SIGN OUT ──
+  window._logout = async function () {
+    await signOut(auth);
+    sessionStorage.removeItem('gh_token');
+    showPage('landing');
+  };
+
+  // ── POPULATE DASHBOARD WITH REAL USER DATA ──
+  function populateDashboard(user) {
+    const username = user.displayName || user.email || 'GitHub User';
+    const initial  = username.charAt(0).toUpperCase();
+
+    document.getElementById('user-name').textContent  = username;
+    document.getElementById('user-avatar').textContent = initial;
+    document.getElementById('user-plan').textContent   = 'Free Plan';
+
+    // If avatar photo is available, show it
+    if (user.photoURL) {
+      const avatarEl = document.getElementById('user-avatar');
+      avatarEl.style.backgroundImage = `url(${user.photoURL})`;
+      avatarEl.style.backgroundSize  = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.textContent = '';
+    }
+  }
+
+  // ── LOAD REAL REPOS FROM GITHUB ──
+  window._loadRepos = async function (token) {
+    token = token || sessionStorage.getItem('gh_token');
+    if (!token) return;
+
+    const grid = document.getElementById('repos-grid');
+    grid.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:20px">Loading your repositories…</div>';
+
+    try {
+      const res   = await fetch('https://api.github.com/user/repos?sort=updated&per_page=20', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const repos = await res.json();
+
+      if (!Array.isArray(repos) || repos.length === 0) {
+        grid.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:20px">No repositories found.</div>';
+        return;
+      }
+
+      const enabledRepos = JSON.parse(localStorage.getItem('enabled_repos') || '[]');
+
+      grid.innerHTML = repos.map(repo => {
+        const isEnabled = enabledRepos.includes(repo.full_name);
+        return `
+        <div class="repo-card" id="repo-${repo.id}">
+          <div class="repo-header">
+            <div class="repo-name">${repo.owner.login} / <span>${repo.name}</span></div>
+            <div class="toggle ${isEnabled ? 'on' : ''}"
+                 onclick="toggleRepo(this, '${repo.full_name}', ${repo.id})"
+                 title="Enable Neural Audit on this repo"></div>
+          </div>
+          <div class="repo-meta">
+            <span>${repo.language || 'Unknown'}</span>
+            <span>★ ${repo.stargazers_count}</span>
+            <span>${repo.private ? '🔒 Private' : '🌐 Public'}</span>
+          </div>
+          <div class="repo-stats">
+            <span class="repo-stat ${isEnabled ? 'stat-green' : 'stat-purple'}">${isEnabled ? '✓ Enabled' : 'Not enabled'}</span>
+          </div>
+        </div>
+      `}).join('') + `
+        <div class="repo-card" style="border-style:dashed;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:120px"
+             onclick="loadRepos()">
+          <div style="text-align:center;color:var(--muted)">
+            <div style="font-size:24px;margin-bottom:8px">↻</div>
+            <div style="font-size:14px">Refresh list</div>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      grid.innerHTML = `<div style="color:var(--red);font-size:14px;padding:20px">Failed to load repos: ${err.message}</div>`;
+    }
+  };
+
+  // ── TOGGLE REPO (ENABLE / DISABLE NEURAL AUDIT) ──
+  window._toggleRepo = async function (toggleEl, repoFullName, repoId) {
+    const token = sessionStorage.getItem('gh_token');
+    if (!token) { alert('Not signed in'); return; }
+
+    const isEnabling = !toggleEl.classList.contains('on');
+
+    if (isEnabling) {
+      toggleEl.style.opacity = '0.5';
+      toggleEl.style.pointerEvents = 'none';
+
+      try {
+        // ── N8N ENABLE REPO WEBHOOK URL ──
+        const N8N_ENABLE_URL = 'https://papaorwot.app.n8n.cloud/webhook/enable-repo';
+
+        const res = await fetch(N8N_ENABLE_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ repo_full_name: repoFullName, access_token: token, pr_webhook_url: 'https://papaorwot.app.n8n.cloud/webhook/github-pr' })
+        });
+
+        if (res.ok) {
+          toggleEl.classList.add('on');
+          const card    = document.getElementById('repo-' + repoId);
+          const statEl  = card?.querySelector('.repo-stat');
+          if (statEl) {
+            statEl.className = 'repo-stat stat-green';
+            statEl.textContent = '✓ Enabled';
+          }
+          // Save to localStorage so it persists on refresh
+          const enabled = JSON.parse(localStorage.getItem('enabled_repos') || '[]');
+          if (!enabled.includes(repoFullName)) enabled.push(repoFullName);
+          localStorage.setItem('enabled_repos', JSON.stringify(enabled));
+        } else {
+          const errText = await res.text();
+          console.error('n8n error:', res.status, errText);
+          alert('Failed to enable repo. Status: ' + res.status + '\n' + errText);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        toggleEl.style.opacity = '';
+        toggleEl.style.pointerEvents = '';
+      }
+    } else {
+      toggleEl.classList.remove('on');
+      const card   = document.getElementById('repo-' + repoId);
+      const statEl = card?.querySelector('.repo-stat');
+      if (statEl) {
+        statEl.className = 'repo-stat stat-purple';
+        statEl.textContent = 'Not enabled';
+      }
+      // Remove from localStorage
+      const enabled = JSON.parse(localStorage.getItem('enabled_repos') || '[]');
+      localStorage.setItem('enabled_repos', JSON.stringify(enabled.filter(r => r !== repoFullName)));
+    }
+  };
+
+  // ── PAGE HELPERS (global so onclick= works) ──
+  window._showPage = function (id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.dashboard').forEach(p => p.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  };
+
+  window._showDashboard = function () {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('dashboard').classList.add('active');
+  };
+
+  window._showDashTab = function (tab) {
+    ['overview','repos','reviews','leaderboard','settings'].forEach(t => {
+      const el = document.getElementById('tab-' + t);
+      if (el) el.style.display = t === tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+    const tabs = ['overview','repos','reviews','leaderboard','settings'];
+    const idx  = tabs.indexOf(tab);
+    document.querySelectorAll('.sidebar-item')[idx]?.classList.add('active');
+    // Load repos when switching to that tab
+    if (tab === 'repos') loadRepos();
+  };
+
+</script>
+</body>
+</html>
