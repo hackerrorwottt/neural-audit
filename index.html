@@ -241,6 +241,47 @@
       transform: translateY(-2px);
     }
 
+    /* ── COMPARISON TABLE ── */
+    .compare-table {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .compare-row + .compare-row { border-top: 1px solid var(--border); }
+
+    .compare-header {
+      background: var(--bg3);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .compare-header > div { padding: 16px 24px; }
+    .compare-header > div:last-child { color: var(--text); }
+
+    .compare-cell {
+      padding: 20px 24px;
+      font-size: 15px;
+      background: var(--card);
+    }
+
+    .compare-copilot { color: var(--muted); }
+    .compare-neural { color: var(--text); font-weight: 500; position: relative; }
+    .compare-neural::before {
+      content: '✓';
+      color: var(--green);
+      margin-right: 10px;
+      font-weight: 700;
+    }
+
     .feature-icon {
       font-family: 'JetBrains Mono', monospace;
       font-size: 13px;
@@ -506,6 +547,82 @@
     .stat-card-value { font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
     .stat-card-sub { font-size: 12px; color: var(--green); margin-top: 4px; }
 
+    /* ── ANALYTICS TAB: ENLARGED STAT CARDS ── */
+    .analytics-stat-card { padding: 28px; }
+    .analytics-stat-value { font-size: 40px; margin: 4px 0; }
+    .analytics-stat-sub { font-size: 13px; margin-top: 8px; }
+    .analytics-stats-row { gap: 20px; }
+
+    /* ── RISK BREAKDOWN (sample data, not yet wired to live reviews) ── */
+    .risk-breakdown-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    .risk-metric-row { display: flex; align-items: center; gap: 12px; }
+    .risk-metric-icon {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .risk-metric-info { width: 110px; flex-shrink: 0; font-size: 13px; font-weight: 500; }
+    .risk-metric-bar-wrap { flex: 1; }
+    .risk-metric-bar { height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .risk-metric-fill { height: 100%; border-radius: 4px; }
+    .risk-metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      width: 56px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .risk-metric-value span { color: var(--muted); font-size: 11px; }
+
+    /* ── REVIEW DETAILS: ISSUE CARDS ── */
+    .issue-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+
+    .issue-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+
+    .issue-sev {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .issue-sev-critical { background: rgba(255,92,92,0.12); color: var(--red); }
+    .issue-sev-warning  { background: rgba(255,200,92,0.12); color: var(--yellow); }
+    .issue-sev-info     { background: rgba(255,255,255,0.08); color: var(--text); }
+
+    .issue-title { font-size: 15px; font-weight: 600; }
+    .issue-location { color: var(--muted); font-size: 12px; font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+
+    .issue-code-block {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+    .issue-code-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .issue-code-block.code-before { color: var(--red); }
+    .issue-code-block.code-after { color: var(--green); }
+
+    .issue-confidence { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .issue-confidence b { color: var(--text); font-family: 'JetBrains Mono', monospace; }
+
     /* ── REPOS ── */
     .section-header {
       display: flex;
@@ -738,9 +855,9 @@
   </nav>
 
   <div class="hero">
-    <div class="hero-badge">Powered by AI Agents</div>
-    <h1>Code reviews that<br/><span>actually ship faster</span></h1>
-    <p>Neural Audit automatically reviews every pull request — catching security vulnerabilities, bugs, and performance issues before they reach production.</p>
+    <div class="hero-badge">Autonomous Pull Request Risk Engine</div>
+    <h1>Prevent risky pull requests<br/><span>before they reach production.</span></h1>
+    <p>Neural Audit analyzes every pull request for security, reliability, performance, and maintainability risks before code reaches production.</p>
     <div class="hero-actions">
       <button class="btn btn-github" onclick="signInWithGitHub()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -809,6 +926,35 @@
         <div class="feature-icon">06</div>
         <h3>Instant Notifications</h3>
         <p>Get email alerts the moment a review is complete with the full analysis and actionable fix suggestions.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Why Not Copilot -->
+  <div class="features">
+    <div class="section-label">Comparison</div>
+    <div class="section-title">Why not just use an AI coding assistant?</div>
+    <p style="color:var(--muted);font-size:15px;max-width:640px;margin:-24px 0 32px;line-height:1.7">Copilot, Cursor, and similar tools assist developers as they write code — they don't review pull requests, score risk, or give teams visibility once code is pushed.</p>
+    <div class="compare-table">
+      <div class="compare-row compare-header">
+        <div>GitHub Copilot</div>
+        <div>Neural Audit</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell compare-copilot">Assists coding</div>
+        <div class="compare-cell compare-neural">Reviews every PR automatically</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell compare-copilot">Individual developer</div>
+        <div class="compare-cell compare-neural">Team-wide visibility</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell compare-copilot">No risk scoring</div>
+        <div class="compare-cell compare-neural">Risk intelligence</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell compare-copilot">No repository analytics</div>
+        <div class="compare-cell compare-neural">Historical insights</div>
       </div>
     </div>
   </div>
@@ -933,6 +1079,7 @@
       <div class="sidebar-item active" onclick="showDashTab('overview')">Overview</div>
       <div class="sidebar-item" onclick="showDashTab('repos')">Repositories</div>
       <div class="sidebar-item" onclick="showDashTab('reviews')">Reviews</div>
+      <div class="sidebar-item" onclick="showDashTab('analytics')">Analytics</div>
       <div class="sidebar-item" onclick="showDashTab('leaderboard')">Leaderboard</div>
       <div class="sidebar-item" onclick="showDashTab('settings')">Settings</div>
     </div>
@@ -951,7 +1098,7 @@
     <div id="tab-overview">
       <div class="dash-header">
         <div>
-          <h1>Good afternoon</h1>
+          <h1 id="greeting-text">Good afternoon</h1>
           <p>Here's what Neural Audit found today</p>
         </div>
         <button class="btn btn-primary" onclick="showDashTab('repos')">+ Add Repository</button>
@@ -981,6 +1128,70 @@
       </div>
 
       <div class="section-header">
+        <h2>Risk Breakdown</h2>
+        <span style="color:var(--muted);font-size:12px">Last 30 days · sample data, not yet wired to live reviews</span>
+      </div>
+      <div class="risk-breakdown-grid">
+        <div class="repo-card" style="display:flex;align-items:center;justify-content:center;min-height:260px">
+          <svg viewBox="0 0 240 240" width="220" height="220">
+            <!-- grid rings -->
+            <polygon points="120,30 210,120 120,210 30,120" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <polygon points="120,52.5 187.5,120 120,187.5 52.5,120" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <polygon points="120,75 165,120 120,165 75,120" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <polygon points="120,97.5 142.5,120 120,142.5 97.5,120" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <!-- axis lines -->
+            <line x1="120" y1="30" x2="120" y2="210" stroke="var(--border)" stroke-width="1"/>
+            <line x1="30" y1="120" x2="210" y2="120" stroke="var(--border)" stroke-width="1"/>
+            <!-- data polygon: Security 92 (top), Reliability 68 (right), Maintainability 74 (bottom), Performance 81 (left) -->
+            <polygon points="120,37.2 181.2,120 120,186.6 47.1,120" fill="rgba(34,211,160,0.12)" stroke="var(--green)" stroke-width="2"/>
+            <circle cx="120" cy="37.2" r="3.5" fill="var(--green)"/>
+            <circle cx="181.2" cy="120" r="3.5" fill="var(--green)"/>
+            <circle cx="120" cy="186.6" r="3.5" fill="var(--green)"/>
+            <circle cx="47.1" cy="120" r="3.5" fill="var(--green)"/>
+            <!-- labels -->
+            <text x="120" y="20" text-anchor="middle" fill="var(--muted)" font-size="11" font-family="Inter">Security</text>
+            <text x="222" y="124" text-anchor="start" fill="var(--muted)" font-size="11" font-family="Inter">Reliability</text>
+            <text x="120" y="226" text-anchor="middle" fill="var(--muted)" font-size="11" font-family="Inter">Maintainability</text>
+            <text x="18" y="124" text-anchor="end" fill="var(--muted)" font-size="11" font-family="Inter">Performance</text>
+          </svg>
+        </div>
+        <div class="repo-card" style="display:flex;flex-direction:column;gap:16px;justify-content:center">
+          <div class="risk-metric-row">
+            <div class="risk-metric-icon" style="background:rgba(34,211,160,0.12);color:var(--green)">●</div>
+            <div class="risk-metric-info">
+              <div class="risk-metric-label">Security</div>
+            </div>
+            <div class="risk-metric-bar-wrap"><div class="risk-metric-bar"><div class="risk-metric-fill" style="width:92%;background:var(--green)"></div></div></div>
+            <div class="risk-metric-value">92<span>/100</span></div>
+          </div>
+          <div class="risk-metric-row">
+            <div class="risk-metric-icon" style="background:rgba(255,200,92,0.12);color:var(--yellow)">●</div>
+            <div class="risk-metric-info">
+              <div class="risk-metric-label">Reliability</div>
+            </div>
+            <div class="risk-metric-bar-wrap"><div class="risk-metric-bar"><div class="risk-metric-fill" style="width:68%;background:var(--yellow)"></div></div></div>
+            <div class="risk-metric-value">68<span>/100</span></div>
+          </div>
+          <div class="risk-metric-row">
+            <div class="risk-metric-icon" style="background:rgba(255,255,255,0.1);color:var(--text)">●</div>
+            <div class="risk-metric-info">
+              <div class="risk-metric-label">Performance</div>
+            </div>
+            <div class="risk-metric-bar-wrap"><div class="risk-metric-bar"><div class="risk-metric-fill" style="width:81%;background:var(--text)"></div></div></div>
+            <div class="risk-metric-value">81<span>/100</span></div>
+          </div>
+          <div class="risk-metric-row">
+            <div class="risk-metric-icon" style="background:rgba(34,211,160,0.12);color:var(--green)">●</div>
+            <div class="risk-metric-info">
+              <div class="risk-metric-label">Maintainability</div>
+            </div>
+            <div class="risk-metric-bar-wrap"><div class="risk-metric-bar"><div class="risk-metric-fill" style="width:74%;background:var(--green)"></div></div></div>
+            <div class="risk-metric-value">74<span>/100</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-top:32px">
         <h2>Recent Reviews</h2>
       </div>
       <div class="reviews-table">
@@ -991,28 +1202,28 @@
           <div>Verdict</div>
           <div>Time</div>
         </div>
-        <div class="table-row">
+        <div class="table-row" style="cursor:pointer" onclick="openReviewDetail(19)">
           <div><div class="pr-title">Fix eval usage in numpy.test</div><div class="pr-num">#19</div></div>
           <div style="color:var(--muted);font-size:13px">demorepo</div>
           <div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:42%"></div></div><span style="font-size:12px;font-family:'JetBrains Mono',monospace">42</span></div></div>
           <div><span class="verdict-badge verdict-changes">⚠ Needs Changes</span></div>
           <div style="color:var(--muted);font-size:12px">2 min ago</div>
         </div>
-        <div class="table-row">
+        <div class="table-row" style="cursor:pointer" onclick="openReviewDetail(18)">
           <div><div class="pr-title">Add user authentication</div><div class="pr-num">#18</div></div>
           <div style="color:var(--muted);font-size:13px">demorepo</div>
           <div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:78%"></div></div><span style="font-size:12px;font-family:'JetBrains Mono',monospace">78</span></div></div>
           <div><span class="verdict-badge verdict-approved">✓ Approved</span></div>
           <div style="color:var(--muted);font-size:12px">1 hr ago</div>
         </div>
-        <div class="table-row">
+        <div class="table-row" style="cursor:pointer" onclick="openReviewDetail(17)">
           <div><div class="pr-title">Refactor database queries</div><div class="pr-num">#17</div></div>
           <div style="color:var(--muted);font-size:13px">demorepo</div>
           <div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:31%"></div></div><span style="font-size:12px;font-family:'JetBrains Mono',monospace">31</span></div></div>
           <div><span class="verdict-badge verdict-rejected">✕ Rejected</span></div>
           <div style="color:var(--muted);font-size:12px">3 hr ago</div>
         </div>
-        <div class="table-row">
+        <div class="table-row" style="cursor:pointer" onclick="openReviewDetail(16)">
           <div><div class="pr-title">Update dependencies</div><div class="pr-num">#16</div></div>
           <div style="color:var(--muted);font-size:13px">demorepo</div>
           <div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:91%"></div></div><span style="font-size:12px;font-family:'JetBrains Mono',monospace">91</span></div></div>
@@ -1035,6 +1246,55 @@
       <div class="repos-grid" id="repos-grid">
         <div style="color:var(--muted);font-size:14px;padding:20px">Loading your repositories…</div>
       </div>
+
+      <div class="section-header" style="margin-top:8px">
+        <h2>Repository Health</h2>
+        <span style="color:var(--muted);font-size:12px">Sample data, not yet wired to live reviews</span>
+      </div>
+      <div class="reviews-table">
+        <div class="table-header" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+          <div>Repository</div>
+          <div>Health Score</div>
+          <div>Trend</div>
+          <div>PRs</div>
+          <div>Sparkline</div>
+        </div>
+        <div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+          <div class="pr-title">neural-audit</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-weight:600">78</div>
+          <div class="trend-up">↑ 8</div>
+          <div style="color:var(--muted)">32</div>
+          <div><svg viewBox="0 0 80 24" width="80" height="24"><polyline points="0,18 13,15 26,16 39,10 52,12 65,6 80,4" fill="none" stroke="var(--green)" stroke-width="2"/></svg></div>
+        </div>
+        <div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+          <div class="pr-title">frontend</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-weight:600">84</div>
+          <div class="trend-up">↑ 12</div>
+          <div style="color:var(--muted)">28</div>
+          <div><svg viewBox="0 0 80 24" width="80" height="24"><polyline points="0,16 13,14 26,11 39,12 52,8 65,5 80,3" fill="none" stroke="var(--green)" stroke-width="2"/></svg></div>
+        </div>
+        <div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+          <div class="pr-title">backend</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-weight:600">62</div>
+          <div class="trend-down">↓ 4</div>
+          <div style="color:var(--muted)">24</div>
+          <div><svg viewBox="0 0 80 24" width="80" height="24"><polyline points="0,6 13,9 26,8 39,13 52,12 65,17 80,19" fill="none" stroke="var(--red)" stroke-width="2"/></svg></div>
+        </div>
+        <div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+          <div class="pr-title">ml-service</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-weight:600">71</div>
+          <div class="trend-up">↑ 6</div>
+          <div style="color:var(--muted)">18</div>
+          <div><svg viewBox="0 0 80 24" width="80" height="24"><polyline points="0,15 13,17 26,14 39,15 52,10 65,11 80,7" fill="none" stroke="var(--green)" stroke-width="2"/></svg></div>
+        </div>
+        <div class="table-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr">
+          <div class="pr-title">docs-site</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-weight:600">93</div>
+          <div class="trend-up">↑ 15</div>
+          <div style="color:var(--muted)">12</div>
+          <div><svg viewBox="0 0 80 24" width="80" height="24"><polyline points="0,17 13,14 26,12 39,9 52,7 65,5 80,2" fill="none" stroke="var(--green)" stroke-width="2"/></svg></div>
+        </div>
+      </div>
     </div>
 
     <!-- REVIEWS TAB -->
@@ -1053,11 +1313,130 @@
           <div>Verdict</div>
           <div>Date</div>
         </div>
-        <div class="table-row"><div><div class="pr-title">Fix eval usage</div><div class="pr-num">#19</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:42%"></div></div><span style="font-size:12px">42</span></div></div><div><span class="verdict-badge verdict-changes">⚠ Needs Changes</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
-        <div class="table-row"><div><div class="pr-title">Add auth module</div><div class="pr-num">#18</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:78%"></div></div><span style="font-size:12px">78</span></div></div><div><span class="verdict-badge verdict-approved">✓ Approved</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
-        <div class="table-row"><div><div class="pr-title">DB query refactor</div><div class="pr-num">#17</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:31%"></div></div><span style="font-size:12px">31</span></div></div><div><span class="verdict-badge verdict-rejected">✕ Rejected</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
-        <div class="table-row"><div><div class="pr-title">Update deps</div><div class="pr-num">#16</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:91%"></div></div><span style="font-size:12px">91</span></div></div><div><span class="verdict-badge verdict-approved">✓ Approved</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
-        <div class="table-row"><div><div class="pr-title">Fix SQL injection</div><div class="pr-num">#15</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:55%"></div></div><span style="font-size:12px">55</span></div></div><div><span class="verdict-badge verdict-changes">⚠ Needs Changes</span></div><div style="color:var(--muted);font-size:12px">Jun 11</div></div>
+        <div class="table-row" style="cursor:pointer" onclick="openReviewDetail(19)"><div><div class="pr-title">Fix eval usage</div><div class="pr-num">#19</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:42%"></div></div><span style="font-size:12px">42</span></div></div><div><span class="verdict-badge verdict-changes">⚠ Needs Changes</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
+        <div class="table-row" style="cursor:pointer" onclick="openReviewDetail(18)"><div><div class="pr-title">Add auth module</div><div class="pr-num">#18</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:78%"></div></div><span style="font-size:12px">78</span></div></div><div><span class="verdict-badge verdict-approved">✓ Approved</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
+        <div class="table-row" style="cursor:pointer" onclick="openReviewDetail(17)"><div><div class="pr-title">DB query refactor</div><div class="pr-num">#17</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:31%"></div></div><span style="font-size:12px">31</span></div></div><div><span class="verdict-badge verdict-rejected">✕ Rejected</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
+        <div class="table-row" style="cursor:pointer" onclick="openReviewDetail(16)"><div><div class="pr-title">Update deps</div><div class="pr-num">#16</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:91%"></div></div><span style="font-size:12px">91</span></div></div><div><span class="verdict-badge verdict-approved">✓ Approved</span></div><div style="color:var(--muted);font-size:12px">Jun 12</div></div>
+        <div class="table-row" style="cursor:pointer" onclick="openReviewDetail(15)"><div><div class="pr-title">Fix SQL injection</div><div class="pr-num">#15</div></div><div style="color:var(--muted);font-size:13px">demorepo</div><div><div class="score-bar-wrap"><div class="score-bar"><div class="score-fill" style="width:55%"></div></div><span style="font-size:12px">55</span></div></div><div><span class="verdict-badge verdict-changes">⚠ Needs Changes</span></div><div style="color:var(--muted);font-size:12px">Jun 11</div></div>
+      </div>
+    </div>
+
+    <!-- REVIEW DETAILS TAB -->
+    <div id="tab-review-detail" style="display:none">
+      <div class="dash-header">
+        <div>
+          <button class="btn btn-outline" style="font-size:13px;margin-bottom:12px" onclick="showDashTab('reviews')">← Back to Reviews</button>
+          <h1 id="rd-title">Fix SQL Injection in user query</h1>
+          <p><span id="rd-pr-num">#15</span> · <span id="rd-repo">demorepo</span></p>
+        </div>
+        <span id="rd-verdict-badge" class="verdict-badge verdict-changes" style="font-size:14px;padding:8px 16px">⚠ Needs Changes</span>
+      </div>
+
+      <div class="stats-row" style="grid-template-columns:1fr 3fr">
+        <div class="stat-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div class="stat-card-label">Overall Score</div>
+          <div class="stat-card-value" id="rd-score" style="font-size:40px">55</div>
+        </div>
+        <div class="repo-card" style="display:flex;flex-direction:column;gap:14px;justify-content:center">
+          <div class="risk-metric-row">
+            <div class="risk-metric-icon" style="background:rgba(255,92,92,0.12);color:var(--red)">●</div>
+            <div class="risk-metric-info">Security</div>
+            <div class="risk-metric-bar-wrap"><div class="risk-metric-bar"><div class="risk-metric-fill" id="rd-bar-security" style="width:32%;background:var(--red)"></div></div></div>
+            <div class="risk-metric-value" id="rd-val-security">32<span>/100</span></div>
+          </div>
+          <div class="risk-metric-row">
+            <div class="risk-metric-icon" style="background:rgba(34,211,160,0.12);color:var(--green)">●</div>
+            <div class="risk-metric-info">Reliability</div>
+            <div class="risk-metric-bar-wrap"><div class="risk-metric-bar"><div class="risk-metric-fill" id="rd-bar-reliability" style="width:78%;background:var(--green)"></div></div></div>
+            <div class="risk-metric-value" id="rd-val-reliability">78<span>/100</span></div>
+          </div>
+          <div class="risk-metric-row">
+            <div class="risk-metric-icon" style="background:rgba(34,211,160,0.12);color:var(--green)">●</div>
+            <div class="risk-metric-info">Performance</div>
+            <div class="risk-metric-bar-wrap"><div class="risk-metric-bar"><div class="risk-metric-fill" id="rd-bar-performance" style="width:81%;background:var(--green)"></div></div></div>
+            <div class="risk-metric-value" id="rd-val-performance">81<span>/100</span></div>
+          </div>
+          <div class="risk-metric-row">
+            <div class="risk-metric-icon" style="background:rgba(255,200,92,0.12);color:var(--yellow)">●</div>
+            <div class="risk-metric-info">Maintainability</div>
+            <div class="risk-metric-bar-wrap"><div class="risk-metric-bar"><div class="risk-metric-fill" id="rd-bar-maintainability" style="width:69%;background:var(--yellow)"></div></div></div>
+            <div class="risk-metric-value" id="rd-val-maintainability">69<span>/100</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header" style="margin-top:32px">
+        <h2>Issues Found</h2>
+      </div>
+      <div id="rd-issues-list" style="display:flex;flex-direction:column;gap:16px"></div>
+    </div>
+
+    <!-- ANALYTICS TAB -->
+    <div id="tab-analytics" style="display:none">
+      <div class="dash-header">
+        <div>
+          <h1>Analytics</h1>
+          <p>Repository health trends over time</p>
+        </div>
+        <span style="color:var(--muted);font-size:12px">Sample data, not yet wired to live reviews</span>
+      </div>
+
+      <div class="repo-card" style="margin-bottom:24px;padding:32px">
+        <div class="section-header" style="margin-bottom:24px">
+          <h2>Repository Health Trend</h2>
+          <span style="color:var(--muted);font-size:12px">Last 30 days</span>
+        </div>
+        <svg viewBox="0 0 760 320" width="100%" height="340" style="overflow:visible">
+          <!-- horizontal gridlines -->
+          <line x1="0" y1="20" x2="760" y2="20" stroke="var(--border)" stroke-width="1"/>
+          <line x1="0" y1="95" x2="760" y2="95" stroke="var(--border)" stroke-width="1"/>
+          <line x1="0" y1="170" x2="760" y2="170" stroke="var(--border)" stroke-width="1"/>
+          <line x1="0" y1="245" x2="760" y2="245" stroke="var(--border)" stroke-width="1"/>
+          <text x="0" y="16" fill="var(--muted)" font-size="13" font-family="JetBrains Mono, monospace">100</text>
+          <text x="0" y="91" fill="var(--muted)" font-size="13" font-family="JetBrains Mono, monospace">75</text>
+          <text x="0" y="166" fill="var(--muted)" font-size="13" font-family="JetBrains Mono, monospace">50</text>
+          <text x="0" y="241" fill="var(--muted)" font-size="13" font-family="JetBrains Mono, monospace">25</text>
+          <!-- area fill -->
+          <polyline points="20,218 140,186 260,191 380,157 500,168 620,131 740,102 740,310 20,310"
+            fill="rgba(34,211,160,0.08)" stroke="none"/>
+          <!-- trend line -->
+          <polyline points="20,218 140,186 260,191 380,157 500,168 620,131 740,102"
+            fill="none" stroke="var(--green)" stroke-width="3"/>
+          <circle cx="20" cy="218" r="4.5" fill="var(--green)"/>
+          <circle cx="140" cy="186" r="4.5" fill="var(--green)"/>
+          <circle cx="260" cy="191" r="4.5" fill="var(--green)"/>
+          <circle cx="380" cy="157" r="4.5" fill="var(--green)"/>
+          <circle cx="500" cy="168" r="4.5" fill="var(--green)"/>
+          <circle cx="620" cy="131" r="4.5" fill="var(--green)"/>
+          <circle cx="740" cy="102" r="4.5" fill="var(--green)"/>
+          <text x="20" y="316" fill="var(--muted)" font-size="13" font-family="Inter">May 1</text>
+          <text x="240" y="316" fill="var(--muted)" font-size="13" font-family="Inter">May 8</text>
+          <text x="460" y="316" fill="var(--muted)" font-size="13" font-family="Inter">May 15</text>
+          <text x="700" y="316" fill="var(--muted)" font-size="13" font-family="Inter">May 28</text>
+        </svg>
+      </div>
+
+      <div class="stats-row analytics-stats-row">
+        <div class="stat-card analytics-stat-card">
+          <div class="stat-card-label">Avg Risk Score</div>
+          <div class="stat-card-value analytics-stat-value">68</div>
+          <div class="stat-card-sub analytics-stat-sub">↑ 12% vs last month</div>
+        </div>
+        <div class="stat-card analytics-stat-card">
+          <div class="stat-card-label">Critical Issues</div>
+          <div class="stat-card-value analytics-stat-value" style="color:var(--red)">23</div>
+          <div class="stat-card-sub analytics-stat-sub" style="color:var(--green)">↓ 17% vs last month</div>
+        </div>
+        <div class="stat-card analytics-stat-card">
+          <div class="stat-card-label">PRs Reviewed</div>
+          <div class="stat-card-value analytics-stat-value">128</div>
+          <div class="stat-card-sub analytics-stat-sub">↑ 14% vs last month</div>
+        </div>
+        <div class="stat-card analytics-stat-card">
+          <div class="stat-card-label">Approval Rate</div>
+          <div class="stat-card-value analytics-stat-value" style="color:var(--green)">82%</div>
+          <div class="stat-card-sub analytics-stat-sub">↑ 9% vs last month</div>
+        </div>
       </div>
     </div>
 
@@ -1172,6 +1551,7 @@
   function showDashTab(tab)    { window._showDashTab && window._showDashTab(tab); }
   function loadRepos(t)        { window._loadRepos && window._loadRepos(t); }
   function toggleRepo(el,n,id) { window._toggleRepo && window._toggleRepo(el,n,id); }
+  function openReviewDetail(n) { window._openReviewDetail && window._openReviewDetail(n); }
 </script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1206,33 +1586,6 @@
     }
   });
 
-  // ── SUPABASE CONFIG ──
-  const SUPABASE_URL = "https://ollioaglvqkcqkyhcvbc.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_HBoct32_GziU4mztPzKkIg_AsdOvEeP";
-
-  // Save/refresh this user's GitHub token in Supabase so the review
-  // workflow can look up the RIGHT user's token instead of a shared one.
-  async function saveTokenToSupabase(username, githubToken) {
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-        method: "POST",
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Authorization": `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-          "Prefer": "resolution=merge-duplicates"
-        },
-        body: JSON.stringify({
-          github_username: username,
-          github_token: githubToken,
-          token_updated_at: new Date().toISOString()
-        })
-      });
-    } catch (err) {
-      console.error('Failed to save token to Supabase:', err);
-    }
-  }
-
   // ── SIGN IN ──
   window._signInWithGitHub = async function () {
     try {
@@ -1243,30 +1596,6 @@
 
       // Store token in sessionStorage so n8n calls can use it
       sessionStorage.setItem('gh_token', accessToken);
-
-      // Get the REAL GitHub username directly from GitHub's API.
-      // Firebase's displayName is often the person's full name, not their
-      // GitHub login — and the n8n workflow needs the exact login to match
-      // against webhook payloads later, so we ask GitHub directly instead
-      // of guessing from an unreliable Firebase field.
-      let githubUsername = null;
-      try {
-        const ghRes = await fetch('https://api.github.com/user', {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        const ghUser = await ghRes.json();
-        githubUsername = ghUser.login;
-      } catch (err) {
-        console.error('Failed to fetch GitHub username:', err);
-      }
-
-      // Persist this user's token so reviews on THEIR repos use THEIR
-      // credentials instead of a single shared/hardcoded token.
-      if (githubUsername) {
-        await saveTokenToSupabase(githubUsername, accessToken);
-      } else {
-        console.warn('Skipped saving token to Supabase — could not resolve GitHub username.');
-      }
 
       populateDashboard(user);
       showDashboard();
@@ -1302,6 +1631,22 @@
       avatarEl.style.backgroundPosition = 'center';
       avatarEl.textContent = '';
     }
+
+    updateGreeting();
+  }
+
+  // ── DYNAMIC GREETING BASED ON LOCAL TIME ──
+  function updateGreeting() {
+    const hour = new Date().getHours();
+    let greeting;
+    if (hour < 5)       greeting = 'Good night';
+    else if (hour < 12)  greeting = 'Good morning';
+    else if (hour < 17)  greeting = 'Good afternoon';
+    else if (hour < 21)  greeting = 'Good evening';
+    else                 greeting = 'Good night';
+
+    const el = document.getElementById('greeting-text');
+    if (el) el.textContent = greeting;
   }
 
   // ── LOAD REAL REPOS FROM GITHUB ──
@@ -1434,16 +1779,153 @@
   };
 
   window._showDashTab = function (tab) {
-    ['overview','repos','reviews','leaderboard','settings'].forEach(t => {
+    ['overview','repos','reviews','review-detail','analytics','leaderboard','settings'].forEach(t => {
       const el = document.getElementById('tab-' + t);
       if (el) el.style.display = t === tab ? 'block' : 'none';
     });
     document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
-    const tabs = ['overview','repos','reviews','leaderboard','settings'];
+    const tabs = ['overview','repos','reviews','analytics','leaderboard','settings'];
     const idx  = tabs.indexOf(tab);
     document.querySelectorAll('.sidebar-item')[idx]?.classList.add('active');
     // Load repos when switching to that tab
     if (tab === 'repos') loadRepos();
+  };
+
+  // ── SAMPLE REVIEW DETAIL DATA ──
+  // Keyed by PR number. Not yet wired to live Supabase reviews — placeholder
+  // data matching the structure real Gemini output will eventually fill.
+  const REVIEW_DETAILS = {
+    '19': {
+      title: 'Fix eval usage in numpy.test',
+      repo: 'demorepo',
+      score: 42,
+      verdict: { label: '⚠ Needs Changes', cls: 'verdict-changes' },
+      risk: { security: 28, reliability: 61, performance: 70, maintainability: 55 },
+      issues: [
+        {
+          severity: 'CRITICAL', title: 'Use of eval() on untrusted input', file: 'numpy_test.py', line: 14,
+          before: "result = eval(user_expression)",
+          after:  "result = ast.literal_eval(user_expression)  # or a restricted parser",
+          desc: 'eval() executes arbitrary Python code, allowing remote code execution if user_expression is attacker-controlled.'
+        },
+        {
+          severity: 'WARNING', title: 'No timeout on evaluation', file: 'numpy_test.py', line: 16,
+          before: "result = eval(user_expression)",
+          after:  "result = run_with_timeout(user_expression, seconds=2)",
+          desc: 'Unbounded evaluation can hang the process on malicious or pathological input.'
+        }
+      ]
+    },
+    '18': {
+      title: 'Add user authentication',
+      repo: 'demorepo',
+      score: 78,
+      verdict: { label: '✓ Approved', cls: 'verdict-approved' },
+      risk: { security: 81, reliability: 84, performance: 75, maintainability: 72 },
+      issues: [
+        {
+          severity: 'INFO', title: 'Password complexity not enforced', file: 'auth.py', line: 22,
+          before: "if len(password) >= 6: ...",
+          after:  "if len(password) >= 12 and has_mixed_case(password): ...",
+          desc: 'Minimum length of 6 is weak by current standards; consider raising the bar.'
+        }
+      ]
+    },
+    '17': {
+      title: 'Refactor database queries',
+      repo: 'demorepo',
+      score: 31,
+      verdict: { label: '✕ Rejected', cls: 'verdict-rejected' },
+      risk: { security: 22, reliability: 40, performance: 35, maintainability: 38 },
+      issues: [
+        {
+          severity: 'CRITICAL', title: 'SQL Injection via string formatting', file: 'db.py', line: 42,
+          before: 'query = f"SELECT * FROM users WHERE id={id}"',
+          after:  'query = "SELECT * FROM users WHERE id=?"\ncursor.execute(query, (id,))',
+          desc: 'User-controlled id is concatenated directly into SQL, allowing injection attacks.'
+        },
+        {
+          severity: 'WARNING', title: 'N+1 query pattern', file: 'db.py', line: 58,
+          before: "for user in users:\n    orders = db.query(f'...WHERE user_id={user.id}')",
+          after:  "orders = db.query('...WHERE user_id IN (?)', [u.id for u in users])",
+          desc: 'A separate query runs per user instead of one batched query, scaling poorly.'
+        }
+      ]
+    },
+    '16': {
+      title: 'Update dependencies',
+      repo: 'demorepo',
+      score: 91,
+      verdict: { label: '✓ Approved', cls: 'verdict-approved' },
+      risk: { security: 95, reliability: 90, performance: 88, maintainability: 92 },
+      issues: [
+        {
+          severity: 'INFO', title: 'Pinned version could be loosened', file: 'requirements.txt', line: 3,
+          before: 'requests==2.28.0',
+          after:  'requests>=2.28.0,<3.0.0',
+          desc: 'Exact pin blocks automatic patch updates; a range still avoids breaking changes.'
+        }
+      ]
+    },
+    '15': {
+      title: 'Fix SQL Injection in user query',
+      repo: 'demorepo',
+      score: 55,
+      verdict: { label: '⚠ Needs Changes', cls: 'verdict-changes' },
+      risk: { security: 32, reliability: 78, performance: 81, maintainability: 69 },
+      issues: [
+        {
+          severity: 'CRITICAL', title: 'SQL Injection', file: 'app.py', line: 42,
+          before: 'query = f"SELECT * FROM users WHERE id={id}"',
+          after:  'query = "SELECT * FROM users WHERE id=?"',
+          desc: 'User input is concatenated directly into the SQL string, allowing an attacker to alter the query.'
+        }
+      ]
+    }
+  };
+
+  const SEV_CLASS = { CRITICAL: 'issue-sev-critical', WARNING: 'issue-sev-warning', INFO: 'issue-sev-info' };
+
+  window._openReviewDetail = function (prNumber) {
+    const data = REVIEW_DETAILS[String(prNumber)];
+    if (!data) return;
+
+    document.getElementById('rd-title').textContent      = data.title;
+    document.getElementById('rd-pr-num').textContent      = '#' + prNumber;
+    document.getElementById('rd-repo').textContent        = data.repo;
+    document.getElementById('rd-score').textContent       = data.score;
+    const badge = document.getElementById('rd-verdict-badge');
+    badge.textContent = data.verdict.label;
+    badge.className   = 'verdict-badge ' + data.verdict.cls;
+    badge.style.fontSize = '14px';
+    badge.style.padding  = '8px 16px';
+
+    ['security','reliability','performance','maintainability'].forEach(k => {
+      const val = data.risk[k];
+      const color = val >= 70 ? 'var(--green)' : val >= 40 ? 'var(--yellow)' : 'var(--red)';
+      document.getElementById('rd-bar-' + k).style.width = val + '%';
+      document.getElementById('rd-bar-' + k).style.background = color;
+      document.getElementById('rd-val-' + k).innerHTML = val + '<span>/100</span>';
+    });
+
+    const list = document.getElementById('rd-issues-list');
+    list.innerHTML = data.issues.map(issue => `
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <span class="issue-sev ${SEV_CLASS[issue.severity]}">${issue.severity}</span>
+          <span class="issue-title">${issue.title}</span>
+          <span class="issue-location">${issue.file}:${issue.line}</span>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:4px">${issue.desc}</p>
+        <div class="issue-code-label">Current code</div>
+        <div class="issue-code-block code-before">${issue.before}</div>
+        <div class="issue-code-label">Suggested fix</div>
+        <div class="issue-code-block code-after">${issue.after}</div>
+        <div class="issue-confidence">Confidence: <b>${data.score}%</b> — derived from this PR's overall review score, not yet a per-issue confidence model</div>
+      </div>
+    `).join('');
+
+    showDashTab('review-detail');
   };
 
 </script>
